@@ -20,7 +20,7 @@ def data_mock_deportistas():
 
     for i in range(0, 10):
         data_deportista.append((
-            data_factory.pyint(),  # id
+            random.randint(10, 99),  # id
             data_factory.street_name(),  # nombre
         ))
 
