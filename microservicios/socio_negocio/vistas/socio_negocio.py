@@ -1,10 +1,12 @@
 from flask import jsonify
 from flask_restful import Resource
 import requests
+from retrying import retry
 
 class vistaSocioNegocio(Resource):
 
     ##Obtener deportista
+    @retry(stop_max_attempt_number=3)
     def get(self):
         
         deportista_response = requests.get('http://127.0.0.1:5000/obtener_deportista')
@@ -12,6 +14,7 @@ class vistaSocioNegocio(Resource):
         return jsonify([deportista_response.status_code, deportista_response.text])
 
     ##Usar ID deportista
+    @retry(stop_max_attempt_number=3)
     def post(self):
         deportista = requests.get('http://127.0.0.1:5000/obtener_deportista').json()
         id_deportista = deportista[0]
