@@ -1,6 +1,7 @@
 from flask import jsonify
 from flask_restful import Resource
 import requests
+from requests.adapters import Retry
 from retrying import retry
 
 class vistaSocioNegocio(Resource):
