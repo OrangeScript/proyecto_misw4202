@@ -14,15 +14,13 @@ class vistaSocioNegocio(Resource):
 
     ##Usar ID deportista
     def post(self):
-
         deportista = requests.get('http://127.0.0.1:5000/obtener_deportista')
         id_deportista = deportista.text[1:3]
+        name_deportista = deportista.nombre
+        concat = f"{id_deportista}{name_deportista}"
 
         print(id_deportista)
 
         
-        pokemon_response = requests.get(f'https://pokeapi.co/api/v2/pokemon/{id_deportista}/')
-
-        pokemon_test = pokemon_response.text
-
-        return jsonify([pokemon_test])
+        enlace_response = requests.post(f'http://127.0.0.1:5002/obtener_enlace/{concat}')
+        return jsonify([enlace_response])
