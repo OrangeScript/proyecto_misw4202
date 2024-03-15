@@ -19,7 +19,10 @@ db.init_app(app)
 db.create_all()
 
 if __name__ == '__main__':
-    mode = sys.argv[1]
+
+    # mode = sys.argv[0]
+    mode = 'dev'
+
     if mode == 'dev':
         app.run(host='0.0.0.0', port=5001, debug=True)
     else:
