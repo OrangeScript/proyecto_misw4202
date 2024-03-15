@@ -26,5 +26,4 @@ def consultar_deportista(id_deportista):
     query = db.session.query(Deportista).filter(Deportista.id == id_deportista).first()
     query = query.__dict__
     del query['_sa_instance_state']
-    print(query)
     return jsonify(query)
