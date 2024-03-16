@@ -1,5 +1,6 @@
 from dotenv import dotenv_values
 import sys
+from flask import Flask, request
 
 import json
 
@@ -18,18 +19,28 @@ from src.socio import Socio, db
 NOW = datetime.now()
 COMPONENTE = 'socio-negocio'
 
+
 def crear_socio_aleatorio(api_key=None):
     try:
+        client_ip = request.access_route[0]
+        ubicacion = get(f"https://ipinfo.io/{client_ip}/json").json()
+
         admin_api_key = dotenv_values('./admin_credentials.env')['API_KEY']
         if api_key != admin_api_key:
-            escribir_log(COMPONENTE, NOW, f'Llave no autorizada {admin_api_key}')
-            
+            escribir_log(COMPONENTE, NOW,
+                         f'Llave no autorizada {admin_api_key}')
+
             return {'message': 'API Key no reconocida'}, 403
-        
+
         fake = Faker()
         nuevo_socio = Socio(
-            nombre = fake.name(),
+            nombre=fake.name(),
+            pais=ubicacion['country'],
+            ciudad=ubicacion['city'],
+            timezone=ubicacion['timezone'],
+            ip=client_ip
         )
+
         db.session.add(nuevo_socio)
         db.session.commit()
         escribir_log(COMPONENTE, NOW, f'Se creo nuevo socio de negocio')
@@ -39,9 +50,10 @@ def crear_socio_aleatorio(api_key=None):
 
     return {'message': f'Se ha creado un socio nuevo'}, 200
 
+
 def consultar_socio(id_socio):
 
-    try: 
+    try:
         query = db.session.query(Socio).filter(Socio.id == id_socio).first()
         query = query.__dict__
         del query['_sa_instance_state']
@@ -53,20 +65,23 @@ def consultar_socio(id_socio):
 
     return jsonify(query), 200
 
+
 def consultar_registro_medico(id_deportista):
 
     try:
-        response = get(f'http://localhost:5000/deportista/registrosmedicos/{id_deportista}').json()
+        client_ip = request.access_route[0]
+
+        response = get(
+            f'http://localhost:5000/deportista/registrosmedicos/{id_deportista}').json()
         escribir_log(COMPONENTE, NOW, 'Se consulto registro medico')
 
-        ip = get("https://api64.ipify.org/?format=json").json()['ip']
-        ubicacion = get(f"https://ipinfo.io/{ip}/json").json()
+        ubicacion = get(f"https://ipinfo.io/{client_ip}/json").json()
 
         mensaje = {
             'id_deportista': id_deportista,
             'accion': 'consultar_registro_medico',
             'fecha': str(NOW),
-            'ip': ip,
+            'ip': client_ip,
             'pais': ubicacion['country'],
             'ciudad': ubicacion['city'],
             'timezone': ubicacion['timezone']
@@ -79,6 +94,7 @@ def consultar_registro_medico(id_deportista):
         sys.exit(1)
 
     return response, 200
+
 
 def enviar_mensaje_a_traceability(mensaje):
     HOST = constants.HOST
