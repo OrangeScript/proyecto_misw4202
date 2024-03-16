@@ -1,13 +1,19 @@
 from dotenv import dotenv_values
 import sys
 
+import json
+
+from src.rabbit import constants
+from src.rabbit.rabbitMqConfig import RabbitMQ
+
 from faker import Faker
 from flask_jsonpify import jsonify
 from requests import get
+from flask import request
 from datetime import datetime
-from .logs_logica import escribir_log
+from src.logs_logica import escribir_log
 
-from .socio import Socio, db
+from src.socio import Socio, db
 
 NOW = datetime.now()
 COMPONENTE = 'socio-negocio'
@@ -53,8 +59,30 @@ def consultar_registro_medico(id_deportista):
         response = get(f'http://localhost:5000/deportista/registrosmedicos/{id_deportista}').json()
         escribir_log(COMPONENTE, NOW, 'Se consulto registro medico')
 
+        ip = get("https://api64.ipify.org/?format=json").json()['ip']
+        ubicacion = get(f"https://ipinfo.io/{ip}/json").json()
+
+        mensaje = {
+            'id_deportista': id_deportista,
+            'accion': 'consultar_registro_medico',
+            'fecha': str(NOW),
+            'ip': ip,
+            'pais': ubicacion['country'],
+            'ciudad': ubicacion['city'],
+            'timezone': ubicacion['timezone']
+        }
+
+        enviar_mensaje_a_traceability(str(mensaje).replace("'", '"'))
+
     except Exception as e:
         escribir_log(COMPONENTE, NOW, f'{e}')
         sys.exit(1)
 
     return response, 200
+
+def enviar_mensaje_a_traceability(mensaje):
+    HOST = constants.HOST
+    QUEUE = constants.QUEUE_NAME
+
+    rabbitmq = RabbitMQ(HOST, QUEUE)
+    rabbitmq.send_message(mensaje, QUEUE)
