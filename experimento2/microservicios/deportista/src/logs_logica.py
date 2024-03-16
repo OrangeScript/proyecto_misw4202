@@ -1,4 +1,4 @@
-from deportista import eventos_app, db
+from src.deportista import eventos_app, db
 
 def escribir_log(nombre_componente, fecha_log, mensaje_log):
     
